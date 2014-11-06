@@ -1,12 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int func(int argc, char *argv[]){
+struct threads{
+	pthread_t		id;
+	int				num;
+};
 
-	int	i;
+int func(void *arg){
 
-	for(i=0; i<argc; i++)
-		fprintf(stderr, "%s\n", argv[i]);
+	struct threads	*thread = arg;
+
+	fprintf(stdout, "Hello World from %d\n", thread->num);
 
 	return EXIT_SUCCESS;
 }
