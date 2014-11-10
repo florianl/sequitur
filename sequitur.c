@@ -17,6 +17,7 @@ static void usage(const char *prog){
 	fprintf(stderr, "%s [OPTIONS] module [module [module]\n", prog);
 	fprintf(stderr, "   starts dynamically the given module(s)\n");
 	fprintf(stderr, "   -V\tprint version and exit\n");
+	fprintf(stderr, "   -h\tprints this help and exit\n");
 }
 
 int main(int argc, char *argv[]){
@@ -29,15 +30,18 @@ int main(int argc, char *argv[]){
 	int				s = 0;
 	int				c = 0;
 
-	while((c = getopt(argc, argv, "V")) != -1){
+	while((c = getopt(argc, argv, "Vh")) != -1){
 		switch(c){
 			case 'V':
 				fprintf(stdout, "sequitur version %s\n", SEQUITUR_VERSION);
 				exit(EXIT_SUCCESS);
 				break;
-			default:
+			case 'h':
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
+				break;
+			default:
+				break;
 		}
 	}
 
