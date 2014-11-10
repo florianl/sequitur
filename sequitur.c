@@ -14,7 +14,7 @@ struct threads{
 };
 
 static void usage(const char *prog){
-	fprintf(stderr, "%s [OPTIONS] module [module [module]\n", prog);
+	fprintf(stderr, "%s [OPTIONS] module [module [module]]\n", prog);
 	fprintf(stderr, "   starts dynamically the given module(s)\n");
 	fprintf(stderr, "   -V\tprint version and exit\n");
 	fprintf(stderr, "   -h\tprints this help and exit\n");
