@@ -45,17 +45,24 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	argc -= optind;
+	argv += optind;
 
-	thread = calloc(argc+1, sizeof(struct threads));
+	if(argc < 1){
+		fprintf(stderr, "missing module(s) to load\n");
+		exit(EXIT_FAILURE);
+	}
+
+	thread = calloc(argc, sizeof(struct threads));
 	if(!thread){
 		fprintf(stderr, "%s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
-	for(i=0; i<=argc; i++){
+	for(i=0; i<argc; i++){
 		thread[i].num = i+1;
 
-		handle = dlopen("./exemplum.so", RTLD_NOW);
+		handle = dlopen(argv[i], RTLD_NOW);
 
 		if(!handle){
 			fprintf(stderr, "%s\n", dlerror());
@@ -77,7 +84,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	for(i=0; i<=argc; i++){
+	for(i=0; i<argc; i++){
 		s = pthread_join(thread[i].id, NULL);
 		if(s!=0){
 			fprintf(stderr, "%s\n", strerror(errno));
