@@ -66,7 +66,7 @@ int main(int argc, char *argv[]){
 
 		if(!handle){
 			fprintf(stderr, "%s\n", dlerror());
-			exit(EXIT_FAILURE);
+			continue;
 		}
 
 		dlerror();
@@ -74,21 +74,23 @@ int main(int argc, char *argv[]){
 		func = (void *(*)()) dlsym(handle,"func");
 		if(!func){
 			fprintf(stderr, "%s\n", dlerror());
-			exit(EXIT_FAILURE);
+			continue;
 		}
 
 		s = pthread_create(&thread[i].id, NULL, &(*func), &thread[i]);
 		if(s!=0){
 			fprintf(stderr, "%s\n", strerror(errno));
-			exit(EXIT_FAILURE);
+			continue;
 		}
 	}
 
 	for(i=0; i<argc; i++){
+		if(thread[i].id==0)
+			continue;
 		s = pthread_join(thread[i].id, NULL);
 		if(s!=0){
 			fprintf(stderr, "%s\n", strerror(errno));
-			exit(EXIT_FAILURE);
+			continue;
 		}
 	}
 
