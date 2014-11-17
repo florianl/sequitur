@@ -25,7 +25,6 @@ int main(int argc, char *argv[]){
 	void			*handle;
 	void			*(*func)(void *);
 	struct threads	*thread;
-	int				errno;
 	int				i = 0;
 	int				s = 0;
 	int				c = 0;
