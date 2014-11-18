@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <fcntl.h>
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <stdio.h>
@@ -11,6 +13,7 @@
 struct threads{
 	pthread_t		id;
 	int				num;
+	int				pipeline[2];
 };
 
 static void usage(const char *prog){
@@ -18,6 +21,8 @@ static void usage(const char *prog){
 	fprintf(stderr, "   starts dynamically the given module(s)\n");
 	fprintf(stderr, "   -V\tprint version and exit\n");
 	fprintf(stderr, "   -h\tprints this help and exit\n");
+	fprintf(stderr, "   -q\tsource to use\n");
+	fprintf(stderr, "     \tif no file is given, the input is read from stdin\n");
 }
 
 int main(int argc, char *argv[]){
@@ -25,11 +30,12 @@ int main(int argc, char *argv[]){
 	void			*handle;
 	void			*(*func)(void *);
 	struct threads	*thread;
+	FILE			*qd = NULL;
 	int				i = 0;
 	int				s = 0;
 	int				c = 0;
 
-	while((c = getopt(argc, argv, "Vh")) != -1){
+	while((c = getopt(argc, argv, "Vhq:")) != -1){
 		switch(c){
 			case 'V':
 				fprintf(stdout, "sequitur version %s\n", SEQUITUR_VERSION);
@@ -38,6 +44,13 @@ int main(int argc, char *argv[]){
 			case 'h':
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
+				break;
+			case 'q':
+				qd = fopen(optarg, "r");
+				if(!qd){
+					fprintf(stderr, "%s\n", strerror(errno));
+					exit(EXIT_FAILURE);
+				}
 				break;
 			default:
 				break;
@@ -60,6 +73,11 @@ int main(int argc, char *argv[]){
 
 	for(i=0; i<argc; i++){
 		thread[i].num = i+1;
+
+		if(pipe2(thread[i].pipeline, O_NONBLOCK | O_CLOEXEC) < 0){
+			fprintf(stderr, "%s\n", strerror(errno));
+			continue;
+		}
 
 		handle = dlopen(argv[i], RTLD_NOW);
 
@@ -95,6 +113,9 @@ int main(int argc, char *argv[]){
 
 	if(thread)
 		free(thread);
+
+	if(qd > 0)
+		fclose(qd);
 
 	return EXIT_SUCCESS;
 }
