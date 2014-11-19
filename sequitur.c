@@ -7,6 +7,9 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 
 #define	SEQUITUR_VERSION	"0.1"
 
@@ -15,6 +18,16 @@ struct threads{
 	int				num;
 	int				pipeline[2];
 };
+
+static mode_t fstype(int fd) {
+	struct stat		s;
+
+	if(fstat(fd, &s) == -1){
+		exit(EXIT_FAILURE);
+	}
+
+	return s.st_mode;
+}
 
 static void usage(const char *prog){
 	fprintf(stderr, "%s [OPTIONS] module [module [module]]\n", prog);
@@ -78,6 +91,7 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "%s\n", strerror(errno));
 			continue;
 		}
+		close(thread[i].pipeline[0]);
 
 		handle = dlopen(argv[i], RTLD_NOW);
 
