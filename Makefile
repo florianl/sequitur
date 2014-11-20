@@ -1,4 +1,4 @@
-CCFLAGS    += -g -Wall
+CCFLAGS    += -g -Wall -Wextra -std=gnu99
 CCSTATIC   +=${CCFLAGS} -rdynamic
 CCDYNAMIC  +=${CCFLAGS} -fPIC
 
