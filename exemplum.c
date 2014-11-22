@@ -26,11 +26,12 @@ int func(void *arg){
 	do{
 		len = read(thread->pipe.out, &buf, 1);
 		if(len < 0){
-			fprintf(stderr, "%s():%d\t%s\n", __func__, __LINE__, strerror(errno));
+			
 			if (errno == EAGAIN) {
 					usleep(1000);
 					continue;
 				}
+			fprintf(stderr, "%s():%d\t%s\n", __func__, __LINE__, strerror(errno));
 			break;
 		}
 		if(len == 0){
