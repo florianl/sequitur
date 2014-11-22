@@ -1,26 +1,44 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+typedef struct{
+		int		out;
+		int		in;
+}pipe_t;
 
 struct threads{
 	pthread_t		id;
 	int				num;
-	int				pipeline[2];
+	pipe_t			pipe;
 };
 
 int func(void *arg){
 
 	struct threads	*thread = arg;
 	char buf;
-
-	close(thread->pipeline[1]);
+	ssize_t		len = 0;
 
 	fprintf(stdout, "Hello World from %d\n", thread->num);
 
-	while(read(thread->pipeline[0], &buf, 1) > 0)
-		fprintf(stdout, "%c", buf);
-	fprintf(stdout, "\n");
-	close(thread->pipeline[0]);
+	do{
+		len = read(thread->pipe.out, &buf, 1);
+		if(len < 0){
+			fprintf(stderr, "%s():%d\t%s\n", __func__, __LINE__, strerror(errno));
+			if (errno == EAGAIN) {
+					usleep(1000);
+					continue;
+				}
+			break;
+		}
+		if(len == 0){
+			/* 	We are done	*/
+			break;
+		}
+		fprintf(stdout, "[%d] %c\n", thread->num, buf);
+	} while(1);
 
 	return EXIT_SUCCESS;
 }
