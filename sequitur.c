@@ -9,15 +9,24 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include <limits.h>
 
 #define	SEQUITUR_VERSION	"0.1"
+
+typedef union {
+	struct{
+		int		out;		/*	read	*/
+		int		in;			/*	write	*/
+		}fd;
+	int		p[2];
+} pipe_t;
 
 struct threads{
 	pthread_t		id;
 	int				num;
-	int				pipeline[2];
+	pipe_t			pipe;
 };
+
 
 static mode_t fstype(int fd) {
 	struct stat		s;
@@ -27,6 +36,32 @@ static mode_t fstype(int fd) {
 	}
 
 	return s.st_mode;
+}
+
+static ssize_t mux(int in,  int *out, int nout) {
+	ssize_t		min = SSIZE_MAX;
+	ssize_t		teed = 0;
+	int			i = 0;
+
+	while(i < nout){
+		teed = tee(in, out[i], (size_t) SSIZE_MAX, SPLICE_F_NONBLOCK);
+		if (teed == 0) {
+			return 0;
+		}
+		if (teed < 0) {
+			if(errno == EAGAIN){
+				usleep(1000);
+				continue;
+			}
+			fprintf(stderr, "%s\n", strerror(errno));
+			return teed;
+		}
+		if (teed < min) {
+			min = teed;
+		}
+		i++;
+	}
+	return (min == SSIZE_MAX) ? 0 : min;
 }
 
 static void usage(const char *prog){
@@ -44,9 +79,16 @@ int main(int argc, char *argv[]){
 	void			*(*func)(void *);
 	struct threads	*thread;
 	FILE			*qd = NULL;
+	int				input = -1;
+	int				origin[2];
 	int				i = 0;
 	int				s = 0;
 	int				c = 0;
+	ssize_t			processus = 0;
+	int				rewrite = -1;
+	int				in = -1;
+	int				*to = NULL;
+	int				nto = 0;
 
 	while((c = getopt(argc, argv, "Vhq:")) != -1){
 		switch(c){
@@ -84,19 +126,24 @@ int main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 
+	to = calloc(argc, sizeof(int));
+	if(!to){
+		fprintf(stderr, "%s\n", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+
 	for(i=0; i<argc; i++){
 		thread[i].num = i+1;
-
-		if(pipe2(thread[i].pipeline, O_NONBLOCK | O_CLOEXEC) < 0){
-			fprintf(stderr, "%s\n", strerror(errno));
-			continue;
-		}
-		close(thread[i].pipeline[0]);
 
 		handle = dlopen(argv[i], RTLD_NOW);
 
 		if(!handle){
 			fprintf(stderr, "%s\n", dlerror());
+			continue;
+		}
+
+		if(pipe2(thread[i].pipe.p, O_NONBLOCK | O_CLOEXEC) < 0){
+			fprintf(stderr, "%s\n", strerror(errno));
 			continue;
 		}
 
@@ -113,6 +160,36 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "%s\n", strerror(errno));
 			continue;
 		}
+		to[nto++] = thread[i].pipe.fd.in;
+	}
+
+
+	if(qd){
+		input = fileno(qd);
+	} else {
+		input = STDIN_FILENO;
+	}
+
+	rewrite = !S_ISFIFO(fstype(input));
+	if(rewrite){
+		if(pipe(origin) < 0){
+			fprintf(stderr, "%s\n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		in = origin[0];
+	} else {
+		in = input;
+	}
+
+	while (1) {
+		processus = mux(in, to, nto);
+		if (processus < 0) {
+			break;
+		}
+		if (processus == 0) {
+			/* 	We are done	*/
+			break;
+		}
 	}
 
 	for(i=0; i<argc; i++){
@@ -128,7 +205,10 @@ int main(int argc, char *argv[]){
 	if(thread)
 		free(thread);
 
-	if(qd > 0)
+	if(to)
+		free(to);
+
+	if(qd)
 		fclose(qd);
 
 	return EXIT_SUCCESS;
