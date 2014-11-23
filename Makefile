@@ -7,9 +7,9 @@ LDSTATIC   +=${LDFLAGS} -ldl -lpopt
 LDDYNAMIC  +=${LDFLAGS} -shared
 
 
-OBJECTS = exemplum.o
+OBJECTS = exemplum.o exemplum2.o
 
-all: sequitur exemplum.so
+all: sequitur exemplum.so exemplum2.so
 
 %.o: %.c
 	${CC} ${CCDYNAMIC} -c -o $@ $<
