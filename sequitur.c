@@ -38,7 +38,21 @@ static mode_t fstype(int fd) {
 	return s.st_mode;
 }
 
-static ssize_t mux(int in,  int *out, int nout) {
+static int consume(int in, unsigned int len){
+	ssize_t		written = 0;
+
+	while (len) {
+		written = splice(in, NULL, STDOUT_FILENO, NULL, len, 0);
+		if(written <= 0){
+			fprintf(stderr, "%s\n", strerror(errno));
+			return -1;
+		}
+		len -= written;
+	}
+	return 0;
+}
+
+static ssize_t mux(int in,  int *out, int nout){
 	ssize_t		min = SSIZE_MAX;
 	ssize_t		teed = 0;
 	int			i = 0;
@@ -183,13 +197,15 @@ int main(int argc, char *argv[]){
 
 	while (1) {
 		processus = mux(in, to, nto);
-		if (processus < 0) {
+		if(processus < 0) {
 			break;
 		}
-		if (processus == 0) {
+		if(processus == 0) {
 			/* 	We are done	*/
 			break;
 		}
+		if(consume(in, processus))
+			break;
 	}
 
 	for(i=0; i<argc; i++){
