@@ -9,7 +9,6 @@ the same data from `sequitur`.
 Usage
 -----
 
-```bash
     $ ./sequitur
     missing module(s) to load
     $ ./sequitur -h
@@ -19,7 +18,7 @@ Usage
        -h	prints this help and exit
        -q	source to use
          	if no file is given, the input is read from stdin
-    $ echo "123" | ./sequitur ./exemplum.so ./exemplum2.so 
+    $ echo "123" | ./sequitur ./exemplum.so ./exemplum2.so
     Hello World from 1
     Hello World from 2
     123
@@ -30,8 +29,7 @@ Usage
     [1] 1
     [1] 2
     [1] 3
-    [1] 
-```
+    [1]
 
 License
 -------
@@ -43,13 +41,13 @@ modification, are permitted provided that the following conditions are
 met:
 
     (1) Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer. 
+    notice, this list of conditions and the following disclaimer.
 
     (2) Redistributions in binary form must reproduce the above copyright
     notice, this list of conditions and the following disclaimer in
     the documentation and/or other materials provided with the
-    distribution.  
-    
+    distribution.
+
     (3)The name of the author may not be used to
     endorse or promote products derived from this software without
     specific prior written permission.
