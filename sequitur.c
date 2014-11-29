@@ -38,11 +38,11 @@ static mode_t fstype(int fd) {
 	return s.st_mode;
 }
 
-static int consume(int in, unsigned int len){
+static int consume(int in, int out, unsigned int len){
 	ssize_t		written = 0;
 
 	while (len) {
-		written = splice(in, NULL, STDOUT_FILENO, NULL, len, 0);
+		written = splice(in, NULL, out, NULL, len, 0);
 		if(written <= 0){
 			fprintf(stderr, "%s\n", strerror(errno));
 			return -1;
@@ -83,8 +83,9 @@ static void usage(const char *prog){
 	fprintf(stderr, "   starts dynamically the given module(s)\n");
 	fprintf(stderr, "   -V\tprint version and exit\n");
 	fprintf(stderr, "   -h\tprints this help and exit\n");
-	fprintf(stderr, "   -q\tsource to use\n");
+	fprintf(stderr, "   -s\tsource to use\n");
 	fprintf(stderr, "     \tif no file is given, the input is read from stdin\n");
+	fprintf(stderr, "   -q\trun in quiet mode\n");
 }
 
 int main(int argc, char *argv[]){
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]){
 	void			*handle;
 	void			*(*func)(void *);
 	struct threads	*thread;
-	FILE			*qd = NULL;
+	FILE			*sd = NULL;
 	int				input = -1;
 	int				origin[2];
 	int				i = 0;
@@ -101,10 +102,11 @@ int main(int argc, char *argv[]){
 	ssize_t			processus = 0;
 	int				rewrite = -1;
 	int				in = -1;
+	int				out = STDOUT_FILENO;
 	int				*to = NULL;
 	int				nto = 0;
 
-	while((c = getopt(argc, argv, "Vhq:")) != -1){
+	while((c = getopt(argc, argv, "Vhs:q")) != -1){
 		switch(c){
 			case 'V':
 				fprintf(stdout, "sequitur version %s\n", SEQUITUR_VERSION);
@@ -114,9 +116,16 @@ int main(int argc, char *argv[]){
 				usage(argv[0]);
 				exit(EXIT_SUCCESS);
 				break;
+			case 's':
+				sd = fopen(optarg, "r");
+				if(!sd){
+					fprintf(stderr, "%s\n", strerror(errno));
+					exit(EXIT_FAILURE);
+				}
+				break;
 			case 'q':
-				qd = fopen(optarg, "r");
-				if(!qd){
+				out = open("/dev/null", O_WRONLY);
+				if(out < 0){
 					fprintf(stderr, "%s\n", strerror(errno));
 					exit(EXIT_FAILURE);
 				}
@@ -178,8 +187,8 @@ int main(int argc, char *argv[]){
 	}
 
 
-	if(qd){
-		input = fileno(qd);
+	if(sd){
+		input = fileno(sd);
 	} else {
 		input = STDIN_FILENO;
 	}
@@ -204,7 +213,7 @@ int main(int argc, char *argv[]){
 			/* 	We are done	*/
 			break;
 		}
-		if(consume(in, processus))
+		if(consume(in, out, processus))
 			break;
 	}
 
@@ -224,8 +233,11 @@ int main(int argc, char *argv[]){
 	if(to)
 		free(to);
 
-	if(qd)
-		fclose(qd);
+	if(sd)
+		fclose(sd);
+
+	if(out != STDOUT_FILENO)
+		close(out);
 
 	return EXIT_SUCCESS;
 }
