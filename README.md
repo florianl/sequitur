@@ -3,8 +3,16 @@ sequitur
 
 This is `sequitur`. `sequitur` is something like a multiplexing software.
 
-It reads from `stdin` if option `-q` is missing. `module(s)` are loaded dynamically and each is started in a separate thread. Each thread gets
+It reads from `stdin` if option `-s` is missing. `module(s)` are loaded
+dynamically and each is started in a separate thread. Each thread gets
 the same data from `sequitur`.
+
+`sequitur` benefits from the advantages of `tee()`. So there is no overhead
+by multiplexing the data from `sequitur` to each `module`. Each `module` can
+process the received data without affecting other `module(s)`.
+
+If you run `sequitur` in quiet mode it will write the copied data each
+`module` received to `/dev/null` instead of `stdout`.
 
 Usage
 -----
@@ -16,8 +24,9 @@ Usage
        starts dynamically the given module(s)
        -V	print version and exit
        -h	prints this help and exit
-       -q	source to use
+       -s	source to use
          	if no file is given, the input is read from stdin
+       -q	run in quiet mode
     $ echo "123" | ./sequitur ./exemplum.so ./exemplum2.so
     Hello World from 1
     Hello World from 2
@@ -30,6 +39,10 @@ Usage
     [1] 2
     [1] 3
     [1]
+
+Set `LD_LIBRARY_PATH` to a directory where the modules are. So you can
+simply specify `exemplum.so` instead of `./exemplum.so` to load the modules.
+
 
 License
 -------
