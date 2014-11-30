@@ -7,7 +7,7 @@ It reads from `stdin` if option `-s` is missing. `module(s)` are loaded
 dynamically and each is started in a separate thread. Each thread gets
 the same data from `sequitur`.
 
-`sequitur` benefits from the advantages of `tee()`. So there is no overhead
+`sequitur` benefits from the advantages of [tee()](http://man7.org/linux/man-pages/man2/tee.2.html). So there is no overhead
 by multiplexing the data from `sequitur` to each `module`. Each `module` can
 process the received data without affecting other `module(s)`.
 
@@ -76,3 +76,8 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
+
+Recommended Articles
+--------------------
+ * [sys_tee](https://lwn.net/Articles/179434/)
+ * [Linux: Explaining splice() and tee()](https://web.archive.org/web/20130521163124/http://kerneltrap.org/node/6505)
