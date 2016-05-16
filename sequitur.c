@@ -109,7 +109,7 @@ int main(int argc, char *argv[]){
 	while((c = getopt(argc, argv, "Vhs:q")) != -1){
 		switch(c){
 			case 'V':
-				fprintf(stdout, "sequitur version %s\n", SEQUITUR_VERSION);
+				fprintf(stdout, "sequitur version git.%s\n", VERSION);
 				exit(EXIT_SUCCESS);
 				break;
 			case 'h':

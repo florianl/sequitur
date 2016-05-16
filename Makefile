@@ -1,4 +1,4 @@
-CCFLAGS    += -g -Wall -Wextra -std=gnu99
+CCFLAGS    += -g -Wall -Wextra -std=gnu99 -DVERSION=\"$(GIT_VERS)\"
 CCSTATIC   +=${CCFLAGS} -rdynamic
 CCDYNAMIC  +=${CCFLAGS} -fPIC
 
@@ -6,6 +6,7 @@ LDFLAGS    += -lpthread
 LDSTATIC   +=${LDFLAGS} -ldl -lpopt
 LDDYNAMIC  +=${LDFLAGS} -shared
 
+GIT_VERS   := $(shell git describe --abbrev=6 --dirty --always --tags)
 
 OBJECTS = exemplum.o exemplum2.o
 
