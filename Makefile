@@ -3,7 +3,7 @@ CCSTATIC   +=${CCFLAGS} -rdynamic
 CCDYNAMIC  +=${CCFLAGS} -fPIC
 
 LDFLAGS    += -lpthread
-LDSTATIC   +=${LDFLAGS} -ldl -lpopt
+LDSTATIC   +=${LDFLAGS} -ldl
 LDDYNAMIC  +=${LDFLAGS} -shared
 
 GIT_VERS   := $(shell git describe --abbrev=6 --dirty --always --tags)
