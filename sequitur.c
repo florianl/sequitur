@@ -44,7 +44,7 @@ static int consume(int in, int out, unsigned int len){
 	while (len) {
 		written = splice(in, NULL, out, NULL, len, 0);
 		if(written <= 0){
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			return -1;
 		}
 		len -= written;
@@ -67,7 +67,7 @@ static ssize_t mux(int in,  int *out, int nout){
 				usleep(1000);
 				continue;
 			}
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			return teed;
 		}
 		if (teed < min) {
@@ -145,13 +145,13 @@ int main(int argc, char *argv[]){
 
 	thread = calloc(argc, sizeof(struct threads));
 	if(!thread){
-		fprintf(stderr, "%s\n", strerror(errno));
+		fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
 	to = calloc(argc, sizeof(int));
 	if(!to){
-		fprintf(stderr, "%s\n", strerror(errno));
+		fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -161,12 +161,12 @@ int main(int argc, char *argv[]){
 		handle = dlopen(argv[i], RTLD_NOW);
 
 		if(!handle){
-			fprintf(stderr, "%s\n", dlerror());
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, dlerror());
 			continue;
 		}
 
 		if(pipe2(thread[i].pipe.p, O_NONBLOCK | O_CLOEXEC) < 0){
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			continue;
 		}
 
@@ -174,13 +174,13 @@ int main(int argc, char *argv[]){
 
 		func = (void *(*)()) dlsym(handle,"func");
 		if(!func){
-			fprintf(stderr, "%s\n", dlerror());
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, dlerror());
 			continue;
 		}
 
 		s = pthread_create(&thread[i].id, NULL, &(*func), &thread[i]);
 		if(s!=0){
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			continue;
 		}
 		to[nto++] = thread[i].pipe.fd.in;
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]){
 	rewrite = !S_ISFIFO(fstype(input));
 	if(rewrite){
 		if(pipe(origin) < 0){
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			exit(EXIT_FAILURE);
 		}
 		in = origin[0];
@@ -222,7 +222,7 @@ int main(int argc, char *argv[]){
 			continue;
 		s = pthread_join(thread[i].id, NULL);
 		if(s!=0){
-			fprintf(stderr, "%s\n", strerror(errno));
+			fprintf(stderr, "%s|%d\t%s\n", __FILE__, __LINE__, strerror(errno));
 			continue;
 		}
 	}
