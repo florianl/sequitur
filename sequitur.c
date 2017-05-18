@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <signal.h>
 
 #define	SEQUITUR_VERSION	"0.1"
 
@@ -76,6 +77,15 @@ static ssize_t mux(int in,  int *out, int nout){
 		i++;
 	}
 	return (min == SSIZE_MAX) ? 0 : min;
+}
+
+void stopModules(struct threads *thread, int num){
+        int             i = 0;
+        for(i=0; i<num ; i++){
+                if(thread[i].id==0)
+                        continue;
+                pthread_kill(thread[i].id, SIGSTOP);
+        }
 }
 
 static void usage(const char *prog){
@@ -208,6 +218,7 @@ int main(int argc, char *argv[]){
 		processus = mux(in, to, nto);
 		if(processus < 0) {
                         /* 	There is an error while multiplexing data	*/
+                        stopModules(thread, argc);
 			break;
 		}
 		if(processus == 0) {
@@ -217,6 +228,7 @@ int main(int argc, char *argv[]){
                 processus = consume(in, out, processus);
 		if(processus < 0) {
                         /* 	There is an error while splicing data	*/
+                        stopModules(thread, argc);
 			break;
 		}
 	}
