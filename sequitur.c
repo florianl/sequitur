@@ -16,14 +16,14 @@
 typedef union {
 	struct{
 		int		out;		/*	read	*/
-		int		in;			/*	write	*/
+		int		in;		/*	write	*/
 		}fd;
 	int		p[2];
 } pipe_t;
 
 struct threads{
 	pthread_t		id;
-	int				num;
+	int			num;
 	pipe_t			pipe;
 };
 
@@ -55,7 +55,7 @@ static int consume(int in, int out, unsigned int len){
 static ssize_t mux(int in,  int *out, int nout){
 	ssize_t		min = SSIZE_MAX;
 	ssize_t		teed = 0;
-	int			i = 0;
+	int		i = 0;
 
 	while(i < nout){
 		teed = tee(in, out[i], (size_t) SSIZE_MAX, SPLICE_F_NONBLOCK);
@@ -92,19 +92,19 @@ int main(int argc, char *argv[]){
 
 	void			*handle;
 	void			*(*func)(void *);
-	struct threads	*thread;
+	struct threads	        *thread;
 	FILE			*sd = NULL;
-	int				input = -1;
-	int				origin[2];
-	int				i = 0;
-	int				s = 0;
-	int				c = 0;
+	int			input = -1;
+	int			origin[2];
+	int			i = 0;
+	int			s = 0;
+	int			c = 0;
 	ssize_t			processus = 0;
-	int				rewrite = -1;
-	int				in = -1;
-	int				out = STDOUT_FILENO;
-	int				*to = NULL;
-	int				nto = 0;
+	int			rewrite = -1;
+	int			in = -1;
+	int			out = STDOUT_FILENO;
+	int			*to = NULL;
+	int			nto = 0;
 
 	while((c = getopt(argc, argv, "Vhs:q")) != -1){
 		switch(c){
@@ -207,14 +207,18 @@ int main(int argc, char *argv[]){
 	while (1) {
 		processus = mux(in, to, nto);
 		if(processus < 0) {
+                        /* 	There is an error while multiplexing data	*/
 			break;
 		}
 		if(processus == 0) {
 			/* 	We are done	*/
 			break;
 		}
-		if(consume(in, out, processus))
+                processus = consume(in, out, processus);
+		if(processus < 0) {
+                        /* 	There is an error while splicing data	*/
 			break;
+		}
 	}
 
 	for(i=0; i<argc; i++){
