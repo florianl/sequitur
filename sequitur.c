@@ -39,6 +39,9 @@ static mode_t fstype(int fd) {
 	return s.st_mode;
 }
 
+/**
+ *      As tee() does not consume the input data, this is done by using splice().
+ **/
 static int consume(int in, int out, unsigned int len){
 	ssize_t		written = 0;
 
@@ -53,6 +56,11 @@ static int consume(int in, int out, unsigned int len){
 	return 0;
 }
 
+/**
+ *      Duplicate input data and provide every loaded module this data.
+ *      This is done by using tee() instead of copy and paste to be more
+ *      efficient.
+ **/
 static ssize_t mux(int in,  int *out, int nout){
 	ssize_t		min = SSIZE_MAX;
 	ssize_t		teed = 0;
@@ -79,6 +87,9 @@ static ssize_t mux(int in,  int *out, int nout){
 	return (min == SSIZE_MAX) ? 0 : min;
 }
 
+/**
+ *      Send SIGSTOP signal to loaded modules.
+ **/
 void stopModules(struct threads *thread, int num){
         int             i = 0;
         for(i=0; i<num ; i++){
